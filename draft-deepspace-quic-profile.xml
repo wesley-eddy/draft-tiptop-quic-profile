@@ -8,10 +8,10 @@
 <!ENTITY nbhy "&#8209;">
 <!ENTITY wj "&#8288;">
 ]>
-<rfc xmlns:xi="http://www.w3.org/2001/XInclude" category="info" docName="draft-many-deepspace-quic-profile-00" ipr="trust200902" obsoletes="" updates="" submissionType="IETF" xml:lang="en" version="3">
+<rfc xmlns:xi="http://www.w3.org/2001/XInclude" category="info" docName="draft-many-tiptop-quic-profile-00" ipr="trust200902" obsoletes="" updates="" submissionType="IETF" xml:lang="en" version="3">
   <front>
     <title>QUIC Profile for Deep Space</title>
-    <seriesInfo name="Internet-Draft" value="draft-many-deepspace-quic-profile-00"/>
+    <seriesInfo name="Internet-Draft" value="draft-many-tiptop-quic-profile-00"/>
     <author fullname="Marc Blanchet" initials="MB">
       <organization>Viagenie</organization>
       <address>
@@ -39,7 +39,7 @@
       <name>Introduction</name>
       <t>Deep space communications involve long delays, such as Earth to Mars is 4-20 minutes, and intermittent communications, because of orbital dynamics, such as when an orbiter is passing over a rover every 6 hours for a duration of 15 minutes.</t>
       <t>Typical QUIC stacks default transport parameters for terrestrial Internet assume low latency such as 100-200 ms, and relative continuous connectivity. Therefore, parameters such as initial_rtt, maximum_idle_timeout have defaults typically not suitable for deep space.</t>
-      <t>Space missions are well scheduled in advance and parameters such as the maximum round-trip time or bandwidth are known and determined in advance. Given relative low bandwidth in space and the intermittent communications, bandwidth usage is very precious and therefore any unneeded communication should be minimized as much as possible.</t>
+      <t>Space missions are scheduled in advance and parameters such as the maximum round-trip time or bandwidth are known and determined in advance. Given relative low bandwidth in space and the intermittent communications, bandwidth usage is very precious and therefore any unneeded communication should be minimized as much as possible.</t>
       <t>It should also be noted that packets will be stored at either layer 2 or layer 3 by orbiters during the periods where connectivity to the next hop is not possible.</t>
       <t>The whole architecture and operation of IP in deep space is discussed in <xref target="I-D.many-deepspace-ip-assessment"/>.</t>
       <section anchor="example">
@@ -59,7 +59,7 @@
     </section>
     <section anchor="calculate_rtt">
         <name>RTT Calculation</name>
-        <t>A QUIC stack estimates the round-trip time(RTT) between the two peers over the period of the connection. This is used for example to initiate the retransmission of packets when the acknowledgment of those packets is not received within the expected RTT. Using the example in <xref target="example"/>, it is necessary to prime the QUIC stack with the right initial values, to avoid, for example, to retransmit packets after 100 ms while the expected RTT is 2 hours.</t>
+        <t>A QUIC stack estimates the round-trip time(RTT) between the two peers over the period of the connection. This is used for example to initiate the retransmission of packets when the acknowledgement of those packets is not received within the expected RTT. Using the example in <xref target="example"/>, it is necessary to prime the QUIC stack with the right initial values, to avoid, for example, to retransmit packets after 100 ms while the expected RTT is 2 hours.</t>
         <t>A space application designer should calculate the maximum RTT for its mission. Using the example in <xref target="example"/>, the maximum RTT due to the maximum two-way delay is 45 minutes and the one due to the overpass frequency is 6 hours, therefore the maximum RTT is 6 hours 45 minutes.</t>
         <t>A space application designer should calculate the minimum RTT for its mission. Using the example in <xref target="example"/>, the minimum RTT due to the minimum two-way delay is 8 minutes and the one due to the overpass frequency is 0 assuming direct line of sight for the whole path, therefore the minimum RTT is 8 minutes.</t>
     </section>
@@ -98,8 +98,8 @@
         </section>
     </section>
     <section>
-        <name>MAX_DATA and MAX_STREAM_DATA</name>
-        <t>MAX_DATA is the maximum number of bytes that can be sent on a connection <xref target="RFC9000"/>. MAX_STREAM_DATA is similar but per stream. Given the BDP of a typical deep space connection, applications should set these parameters to enough large values so that the source is capable of sending data while the bandwidth is available.</t>
+        <name>Max Data</name>
+        <t>initial_max_data is the maximum number of bytes that can be sent on a connection <xref target="RFC9000"/>. initial_max_stream_data is similar but per stream. Given the BDP of a typical deep space connection, applications should set these parameters to enough large values so that the source is capable of sending data while the bandwidth is available.</t>
         <t>The various initial_max_data transport parameters are specified in section 8.2 of <xref target="RFC9000"/>.</t>
     </section>
     <section>
@@ -108,7 +108,7 @@
     </section>
     <section>
         <name>Acknowledgement Frequency</name>
-        <t>QUIC stacks have various mechanisms to trigger acknowledgements, as described in <xref target="RFC9000"/>, <xref target="I-D.ietf-quic-ack-frequency"/>. There are advantages of sending "frequent" acknowledgements, such as the source can free out memory of received frames earlier. However, it may use more bandwidth. Applications should set the acknowledgment frequency on connection establishment based on their requirements.</t>
+        <t>QUIC stacks have various mechanisms to trigger acknowledgements, as described in <xref target="RFC9000"/>, <xref target="I-D.ietf-quic-ack-frequency"/>. There are advantages of sending "frequent" acknowledgements, such as the source can free out memory of received frames earlier. However, it may use more bandwidth. Applications should set the acknowledgement frequency on connection establishment based on their requirements.</t>
         <t>The max_ack_delay and ack_delay_exponent transport parameters are specified in section 8.2 of <xref target="RFC9000"/>.</t>
     </section>
     <section>
@@ -119,7 +119,7 @@
     </section>
     <section>
         <name>New connection IDs</name>
-        <t>QUIC stacks typically preemptively send new connection IDs to the other peer, for future needs such as future connection migration. However, those use cases may not be happening often in deep space. That optional optimization of sending new connection IDs may not be needed for deep space use case.</t>
+        <t>QUIC stacks typically preemptively send new connection IDs to the other peer, for future needs such as future connection migration. However, those use cases may not be happening often in deep space. That optional optimization of sending new connection IDs may not be needed for deep space use case, while the actual cost of these additional bytes is pretty low.</t>
     </section>
     <section>
         <name>FEC</name>
@@ -137,6 +137,10 @@
       <name>Moon Deployment Considerations</name>
       <t>Earth to Moon is just a few light seconds away. When the whole path is all line of sight, it is possible to use QUIC stacks as configured today, but it will take more time to converge, therefore less optimal. The BBR algorithm will be a better choice as it is based on delay to measure congestion.</t>
       <t>However, if one wants to consider orbiters that will have intermittent communications, then the scenario discussed in <xref target="example"/> also applies and calculating RTT and BDP as discussed previously apply.</t>
+    </section>
+    <section anchor="intermittence_aware">
+        <name>Intermittence Aware</name>
+        <t>Another way to solve the generic problem is to make transport aware of the intermittence periods, so that when there is a direct path end-to-end without any intermittence, the normal QUIC behavior such as congestion control may be used with proper RTT configuration, and then a different behavior in the context of intermittence. However, the actual scheduling of communication windows is pretty complicated and have a lot of variations that an intermittence-aware transport will be very fragile.</t>
     </section>
     <section anchor="IANA">
       <name>IANA Considerations</name>
@@ -171,7 +175,8 @@
     </references>
     <section anchor="Acknowledgements" numbered="false">
       <name>Acknowledgements</name>
-      <t>This document and its underlying work has been reviewed and discussed by many, who have provided valuable feedback and comments, including disagreements, and made an overall more solid document. These people are, in no specific order: .</t>
+      <t>This document and its underlying work has been reviewed and discussed by many, who have provided valuable feedback and comments, including disagreements, and made an overall more solid document. These people are, in no specific order: Lars Eggert, Christian Huitema, Adolfo Ochagavia.</t>
+      <t>The Quinn QUIC stack was used for testing. We would like to acknowledge the help of Benjamin Saunders and Adolfo Ochagavia in using Quinn.</t>
     </section>
   </back>
 </rfc>
